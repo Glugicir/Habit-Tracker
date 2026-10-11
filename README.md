@@ -1,3 +1,6 @@
+[![Release](https://img.shields.io/github/v/release/твой-ник/habit-tracker?style=for-the-badge&color=blue)](https://github.com/твой-ник/habit-tracker/releases/latest)
+[![Python](https://img.shields.io/badge/Python-3.12+-blue?style=for-the-badge&logo=python)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 # 🌱 Трекер привычек
 
 Приложение для отслеживания ежедневных привычек с современным тёмным интерфейсом на CustomTkinter.
