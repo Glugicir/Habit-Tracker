@@ -2,7 +2,6 @@
 
 Приложение для отслеживания ежедневных привычек с современным тёмным интерфейсом на CustomTkinter.
 
-![Скриншот приложения](screenshots/main.png)
 
 ## ✨ Возможности
 
@@ -26,3 +25,38 @@
 - **PyInstaller** — сборка в `.exe`
 
 ## 📁 Структура проекта
+```text
+habit_tracker/
+│
+├── main.py                  # Точка входа в приложение
+├── requirements.txt         # Список зависимостей
+├── README.md                # Описание проекта
+├── .gitignore               # Что не коммитить в Git
+│
+├── core/                    # Бизнес-логика (не зависит от UI)
+│   ├── __init__.py
+│   ├── storage.py           # Чтение/запись JSON
+│   ├── habits.py            # Операции с привычками
+│   ├── stats.py             # Статистика (streak, неделя, месяц)
+│   └── achievements.py      # Система достижений
+│
+├── ui/                      # Интерфейс на CustomTkinter
+│   ├── __init__.py
+│   ├── app.py               # Главное окно
+│   ├── header.py            # Заголовок + прогресс-бар
+│   ├── input_panel.py       # Поле ввода + фильтр
+│   ├── habit_list.py        # Список привычек с календарём
+│   ├── actions_panel.py     # Кнопки действий
+│   ├── dev_panel.py         # DEV-инструменты
+│   ├── chart_window.py      # Окно с графиком (matplotlib)
+│   └── edit_dialog.py       # Диалог переименования
+│
+├── assets/                  # Ресурсы
+│   ├── icon.ico             # Иконка приложения
+│   └── icon.png             # Иконка в PNG
+│
+└── data/                    # Данные (создаётся автоматически)
+    ├── habits.json          # Привычки пользователя
+    └── exports/             # Экспортированные CSV
+        └── habits_export.csv
+```
