@@ -16,6 +16,8 @@ from ui.actions_panel import ActionsPanel
 from ui.dev_panel import DevPanel
 from ui.chart_window import ChartWindow
 from ui.edit_dialog import EditDialog
+from core.search import search_habits, search_with_ranking
+from core.sorting import sort_habits
 
 from core.storage import load_habits, save_habits
 from core.habits import (add_habit, delete_habit, mark_done, unmark_done,
@@ -55,21 +57,14 @@ class HabitTrackerApp:
         self.input_panel = InputPanel(
             card_input,
             on_add=self.on_add,
+            on_search=self.on_search,
+            on_sort=self.on_sort,
             only_undone_var=self.only_undone
         )
         self.input_panel.pack(fill="x", padx=14, pady=14)
         self.input_panel.bind("<<FilterChanged>>", lambda e: self.refresh_all())
-
-        card_list = ctk.CTkFrame(self.root, corner_radius=12)
-        card_list.grid(row=2, column=0, sticky="nsew", padx=25, pady=(0, 12))
-        self.habit_list = HabitList(
-            card_list,
-            on_select=self.on_select,
-            on_double_click=self.on_double_click,
-            on_right_click=self.on_right_click
-        )
-        self.habit_list.pack(fill="both", expand=True, padx=4, pady=4)
-        self.habit_list.bind("<<WeekChanged>>", lambda e: self.refresh_all())
+        self.input_panel.bind("<<SearchChanged>>", lambda e: self.on_search())
+        self.input_panel.bind("<<SortChanged>>", lambda e: self.on_sort())
 
         self.actions = ActionsPanel(
             self.root,
@@ -94,11 +89,47 @@ class HabitTrackerApp:
     # ==================== ОБНОВЛЕНИЕ ====================
 
     def refresh_all(self):
+        """Обновляет счётчик и перерисовывает список с учётом поиска и сортировки."""
+        # 1. Счётчик
         total = len(self.habits)
         done = sum(1 for h in self.habits if is_done_today(h))
         self.header.set_counter(done, total)
+
+        # 2. Фильтрация по поиску
+        query = self.input_panel.get_search_query()
+        if query.strip():
+            # Используем поиск с ранжированием — релевантные вперёд
+            filtered = search_with_ranking(self.habits, query)
+        else:
+            filtered = list(enumerate(self.habits))
+
+        # 3. Сортировка
+        sort_type = self.input_panel.get_sort_type()
+        if sort_type != "name" or True:
+            # Сортируем только те, что в filtered
+            indices = [i for i, _ in filtered]
+            habit_objects = [h for _, h in filtered]
+            sorted_objects = sort_habits(habit_objects, sort_type=sort_type)
+
+            # Перестраиваем индексы в соответствии с сортировкой
+            # (нужно для того, чтобы клик по строке работал правильно)
+            new_filtered = []
+            used = set()
+            for h in sorted_objects:
+                for orig_i, orig_h in filtered:
+                    if orig_h is h and orig_i not in used:
+                        new_filtered.append((orig_i, h))
+                        used.add(orig_i)
+                        break
+            filtered = new_filtered
+
+        # 4. Фильтр «только невыполненные»
+        if self.only_undone.get():
+            filtered = [(i, h) for i, h in filtered if not is_done_today(h)]
+
+        # 5. Перерисовка
         self.habit_list.selected_index = self.selected_index
-        self.habit_list.render(self.habits, only_undone=self.only_undone.get())
+        self.habit_list.render_filtered(filtered)
 
     # ==================== ВЫБОР ====================
 
@@ -110,6 +141,14 @@ class HabitTrackerApp:
 
     def on_select(self, index):
         self.selected_index = index
+        self.refresh_all()
+
+    def on_search(self):
+        """Перерисовать список с учётом поиска."""
+        self.refresh_all()
+
+    def on_sort(self):
+        """Перерисовать список с учётом сортировки."""
         self.refresh_all()
 
     def on_double_click(self, index):

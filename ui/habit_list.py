@@ -109,7 +109,7 @@ class HabitList(ctk.CTkFrame):
     def render(self, habits, only_undone=False):
         for w in self.scroll.winfo_children():
             w.destroy()
-
+    
         visible = [
             (i, h) for i, h in enumerate(habits)
             if not (only_undone and is_done_today(h))
@@ -124,6 +124,25 @@ class HabitList(ctk.CTkFrame):
             return
 
         for index, habit in visible:
+            self._render_row(index, habit)
+
+    def render_filtered(self, filtered):
+        """
+        Принимает список (index, habit) и рисует только их.
+        Используется для отфильтрованного/отсортированного списка.
+        """
+        for w in self.scroll.winfo_children():
+            w.destroy()
+
+        if not filtered:
+            ctk.CTkLabel(
+                self.scroll, text="Ничего не найдено.",
+                font=ctk.CTkFont(size=12, slant="italic"),
+                text_color="gray60"
+            ).pack(pady=30)
+            return
+
+        for index, habit in filtered:
             self._render_row(index, habit)
 
     def _render_row(self, index, habit):
